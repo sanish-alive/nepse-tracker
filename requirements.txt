@@ -1,0 +1,4 @@
+fastapi==0.115.7
+passlib==1.7.4
+pyjwt==2.10.1
+nepse @ git+https://github.com/sanish-alive/NepseUnofficialApi.git
