@@ -20,6 +20,7 @@ class DatabaseManager:
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             username TEXT NOT NULL UNIQUE,
                             email TEXT NOT NULL UNIQUE,
+                            status BOOLEAN DEFAULT 0,
                             password TEXT NOT NULL)''')
         print("Users table is created.")
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS stock_tracking (
@@ -37,6 +38,15 @@ class DatabaseManager:
         self.connection.commit()
         print('User created.')
 
+    def getAllUsers(self):
+        self.cursor.execute("SELECT * FROM users")
+        users = self.cursor.fetchall()
+        if users:
+            return users
+        else:
+            return None
+
+
     def getUser(self, email):
         self.cursor.execute("SELECT * FROM users WHERE email = ? LIMIT 1", (email,))
         user = self.cursor.fetchone()
@@ -46,10 +56,17 @@ class DatabaseManager:
             return None
 
 
-    def insertData(self, symbol, min_price, max_price, email):
-        self.cursor.execute("INSERT INTO stock_tracking VALUES (?, ?, ?, ?)", (symbol.upper(), min_price, max_price, email))
+    def storePriceTracker(self, user_id, symbol, min_price, max_price, status):
+        self.cursor.execute("INSERT INTO stock_tracking (user_id, symbol, min_target_price, max_target_price, status) VALUES (?, ?, ?, ?, ?)", (user_id, symbol.upper(), min_price, max_price, status))
         self.connection.commit()
-        print('Inserted.')
+
+    def getUserActivePriceTracker(self, user_id):
+        self.cursor.execute("SELECT * FROM stock_tracking WHERE user_id = ? AND status = '1'", (user_id,))
+        price_tracks = self.cursor.fetchall()
+        if price_tracks:
+            return price_tracks
+        else:
+            return None
 
     def selectData(self):
         self.cursor.execute("SELECT * FROM stock_tracking")

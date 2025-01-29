@@ -1,30 +1,16 @@
-import os
 from dotenv import load_dotenv
 import security
 from typing import Annotated
-from fastapi import Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Response, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, Field
-from nepse import Nepse
 from database import DatabaseManager
-
-load_dotenv()
-
-# nepse = Nepse()
-# nepse.setTLSVerification(False)
-# today_price = nepse.getPriceVolumeHistory(datetime.date.today())
-# print(today_price)
-
-# symbol = input('Enter Symbol: ').upper()
-# min_price = float(input('Enter Minimum Price: '))
-# max_price = float(input('Enter Maximum Price: '))
-# email = input('Enter Email: ')
 
 class PriceTrackerItem(BaseModel):
     symbol: str
     min_target_price: float
     max_target_price: float
-    email: str
+    status: bool
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -54,7 +40,7 @@ async def signUp(item: Annotated[UserRegistration, Body(embed=True)]):
         raise HTTPException(status_code=400, detail=str(e))
     
 @app.post("/signin")
-async def signIn(request: LoginRequest):
+async def signIn(response: Response, request: LoginRequest):
     try:
         db = DatabaseManager()
         user = db.getUser(request.email)
@@ -65,6 +51,13 @@ async def signIn(request: LoginRequest):
                     "email": user["email"]
                 }
                 token = security.createAccessToken(data)
+                response.set_cookie(
+                    key="access_token",
+                    value=token,
+                    httponly=True,
+                    secure=False,
+                    samesite="lax"
+                )
                 return {"message": "Login success.", "token": token}
             else:
                 return {"message": "Login failed."}
@@ -73,9 +66,23 @@ async def signIn(request: LoginRequest):
     except Exception as e:
         return {"error": "login error"}
     
+@app.get("/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"message": "logged out successfully"}
+    
 
 @app.post("/price-tracker")
-async def priceTracker(item: Annotated[PriceTrackerItem, Body(embed=True)]):
-    db = DatabaseManager()
-    db.insertData(item.symbol, item.min_price, item.max_price, item.email)
-    return item.symbol
+async def priceTracker(request: Request, item: Annotated[PriceTrackerItem, Body(embed=True)]):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
+    
+    payload = security.verifyToken(access_token)
+    if payload:
+        db = DatabaseManager()
+        user= db.getUser(payload['email'])
+        db.storePriceTracker(user['id'], item.symbol, item.min_target_price, item.max_target_price, item.status)
+        return {"message": "price is track is added."}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Token")
