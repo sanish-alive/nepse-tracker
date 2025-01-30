@@ -3,23 +3,8 @@ import security
 from typing import Annotated
 from fastapi import Body, FastAPI, HTTPException, Response, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field
 from database import DatabaseManager
-
-class PriceTrackerItem(BaseModel):
-    symbol: str
-    min_target_price: float
-    max_target_price: float
-    status: bool
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserRegistration(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_]+$", description="Username must be alphanumeric and can include underscores.")
-    email: EmailStr
-    password: str = Field(..., min_length=8, description="Password must be at least 8 characters long.")
+import schemas
 
 app = FastAPI()
 
@@ -30,7 +15,7 @@ async def root():
     return {"message": "Welcome to Nepse Tracker"}
 
 @app.post("/signup")
-async def signUp(item: Annotated[UserRegistration, Body(embed=True)]):
+async def signUp(item: Annotated[schemas.UserRegistration, Body(embed=True)]):
     try:
         db = DatabaseManager()
         password = security.getPasswordHash(item.password)
@@ -40,7 +25,7 @@ async def signUp(item: Annotated[UserRegistration, Body(embed=True)]):
         raise HTTPException(status_code=400, detail=str(e))
     
 @app.post("/signin")
-async def signIn(response: Response, request: LoginRequest):
+async def signIn(response: Response, request: schemas.LoginRequest):
     try:
         db = DatabaseManager()
         user = db.getUser(request.email)
@@ -70,10 +55,60 @@ async def signIn(response: Response, request: LoginRequest):
 async def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "logged out successfully"}
+
+@app.get("/profile")
+async def getUser(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
     
+    payload = security.verifyToken(access_token)
+    if payload:
+        db = DatabaseManager()
+        user = db.getUser(payload['email'])
+        data = {
+            "username": user['username'],
+            "email": user["email"],
+            "updatedat": user['updated_at'],
+            "createdat": user['created_at']
+        }
+        return data
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+
+@app.post("/profile/update")
+async def updateProfile(request: Request, user_detail: schemas.UserUpdate):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
+    
+    payload = security.verifyToken(access_token)
+    if payload:
+        db = DatabaseManager()
+        user = db.getUser(payload['email'])
+        db.updateUser(user['id'], user_detail.username, user_detail.email)
+        return {"message": "User detail is updated"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+    
+@app.get("/price-tracker")
+async def getPriceTracker(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
+    
+    payload = security.verifyToken(access_token)
+    if payload:
+        db = DatabaseManager()
+        user = db.getUser(payload['email'])
+        price_tracks = db.geAllUserPriceTracker(user['id'])
+
+        return price_tracks
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Token")
 
 @app.post("/price-tracker")
-async def priceTracker(request: Request, item: Annotated[PriceTrackerItem, Body(embed=True)]):
+async def storePriceTracker(request: Request, item: Annotated[schemas.PriceTrackerItem, Body(embed=True)]):
     access_token = request.cookies.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not Authenticated")

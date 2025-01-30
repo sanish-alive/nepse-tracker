@@ -1,4 +1,5 @@
 import sqlite3, os
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,7 +14,10 @@ class DatabaseManager:
         if hasattr(self, 'connection') and self.connection:
             self.connection.close()
             print('Database connection closed.')
-    
+
+    def currentUtcTimestamp(self):
+        utc_timestamp = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
+        return utc_timestamp
 
     def createTable(self):
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS users (
@@ -33,6 +37,7 @@ class DatabaseManager:
                         min_target_price REAL NOT NULL,     
                         max_target_price REAL NOT NULL,
                         status BOOLEAN DEFAULT 0,
+                        notified_at TIMESTAMP DEFAULT NULL,
                         updated_at TIMESTAMP DEFAULT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (user_id) REFERENCES users(id))''')
@@ -43,6 +48,10 @@ class DatabaseManager:
         self.cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password))
         self.connection.commit()
         print('User created.')
+
+    def updateUser(self, user_id, username, email):
+        self.cursor.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", (username, email, user_id))
+        self.connection.commit()
 
     def getAllUsers(self):
         self.cursor.execute("SELECT * FROM users")
@@ -66,6 +75,14 @@ class DatabaseManager:
         self.cursor.execute("INSERT INTO stock_tracking (user_id, symbol, min_target_price, max_target_price, status) VALUES (?, ?, ?, ?, ?)", (user_id, symbol.upper(), min_price, max_price, status))
         self.connection.commit()
 
+    def geAllUserPriceTracker(self, user_id):
+        self.cursor.execute("SELECT * FROM stock_tracking WHERE user_id = ?", (user_id,))
+        price_tracks = self.cursor.fetchall()
+        if price_tracks:
+            return price_tracks
+        else:
+            return None
+
     def getUserActivePriceTracker(self, user_id):
         self.cursor.execute("SELECT * FROM stock_tracking WHERE user_id = ? AND status = '1'", (user_id,))
         price_tracks = self.cursor.fetchall()
@@ -81,7 +98,8 @@ class DatabaseManager:
 
 if __name__ == "__main__":
     db_manager = DatabaseManager()
-    db_manager.createTable()
+    # db_manager.createTable()
+    print(db_manager.currentUtcTimestamp())
     # data = db_manager.selectData()
     # for d in data:
     #     print(d[0])
