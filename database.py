@@ -5,7 +5,7 @@ load_dotenv()
 
 class DatabaseManager:
     def __init__(self):
-        self.connection = sqlite3.connect(os.getenv('SQLITE_DATABASE_NAME'))
+        self.connection = sqlite3.connect("database/nepsetracker.db")
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
 
@@ -20,9 +20,12 @@ class DatabaseManager:
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             username TEXT NOT NULL UNIQUE,
                             email TEXT NOT NULL UNIQUE,
+                            password TEXT NOT NULL,
                             status BOOLEAN DEFAULT 0,
-                            password TEXT NOT NULL)''')
+                            updated_at TIMESTAMP DEFAULT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         print("Users table is created.")
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS stock_tracking (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id INTEGER NOT NULL,
@@ -30,8 +33,11 @@ class DatabaseManager:
                         min_target_price REAL NOT NULL,     
                         max_target_price REAL NOT NULL,
                         status BOOLEAN DEFAULT 0,
+                        updated_at TIMESTAMP DEFAULT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (user_id) REFERENCES users(id))''')
         print("Stock Tracking table is created.")
+        self.connection.commit()
 
     def insertUser(self, username, email, password):
         self.cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password))
