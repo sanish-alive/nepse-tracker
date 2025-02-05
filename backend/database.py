@@ -26,21 +26,42 @@ class DatabaseManager:
                             email TEXT NOT NULL UNIQUE,
                             password TEXT NOT NULL,
                             status BOOLEAN DEFAULT 0,
-                            updated_at TIMESTAMP DEFAULT NULL,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         print("Users table is created.")
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stock_tracking (
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS sectors (
+                        id  INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+        print("Sectors table is created.")
+
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stocks (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        sector_id INTEGER NOT NULL,
+                        full_name TEXT NOT NULL,
+                        symbol TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        url TEXT NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (sector_id) REFERENCES sectors(id))''')
+        print("stocks table is created")
+
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stock_price_alert (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id INTEGER NOT NULL,
-                        symbol TEXT NOT NULL,
+                        stock_id TEXT NOT NULL,
                         min_target_price REAL NOT NULL,     
                         max_target_price REAL NOT NULL,
                         status BOOLEAN DEFAULT 0,
                         notified_at TIMESTAMP DEFAULT NULL,
-                        updated_at TIMESTAMP DEFAULT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users(id))''')
+                        FOREIGN KEY (user_id) REFERENCES users(id),
+                        FOREIGN KEY (stock_id) REFERENCES stocks(id))''')
         print("Stock Tracking table is created.")
         self.connection.commit()
 
@@ -60,7 +81,6 @@ class DatabaseManager:
             return users
         else:
             return None
-
 
     def getUser(self, email):
         self.cursor.execute("SELECT * FROM users WHERE email = ? LIMIT 1", (email,))
@@ -91,15 +111,28 @@ class DatabaseManager:
         else:
             return None
 
-    def selectData(self):
-        self.cursor.execute("SELECT * FROM stock_tracking")
+    def selectData(self, table_name):
+        self.cursor.execute("SELECT * FROM " + table_name)
         rows = self.cursor.fetchall()
         return rows
 
 if __name__ == "__main__":
+    print("Welcome to Database Manager.")
+    commands = "1> Create Database.\n2> Print All Data of table.\n?> Wild Card.\n"
+    print(commands)
+    i = input('Enter here: ')
+    print("<------------------------------------->")
+
     db_manager = DatabaseManager()
-    # db_manager.createTable()
-    print(db_manager.currentUtcTimestamp())
-    # data = db_manager.selectData()
-    # for d in data:
-    #     print(d[0])
+    if i == '1':
+        db_manager.createTable()
+    elif i == '2':
+        table_name = input('Enter table name: ')
+        data = db_manager.selectData(table_name)
+        for d in data:
+            print(dict(d))
+    else:
+        print(db_manager.currentUtcTimestamp())
+
+    print("<------------------------------------->")
+    print("Closing database manager CLI.")

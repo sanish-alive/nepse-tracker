@@ -2,17 +2,30 @@ from dotenv import load_dotenv
 import security
 from typing import Annotated
 from fastapi import Body, FastAPI, HTTPException, Response, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from database import DatabaseManager
 import schemas
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="signin")
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to Nepse Tracker"}
+
+@app.get("/online")
+async def apiTest():
+    return {"message": "Nepse Tracker API is working..."}
 
 @app.post("/signup")
 async def signUp(item: Annotated[schemas.UserRegistration, Body(embed=True)]):
