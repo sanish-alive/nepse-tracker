@@ -11,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,6 +71,7 @@ async def logout(response: Response):
 
 @app.get("/profile")
 async def getUser(request: Request):
+    print(request.cookies)
     access_token = request.cookies.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not Authenticated")
@@ -130,7 +131,7 @@ async def storePriceTracker(request: Request, item: Annotated[schemas.PriceTrack
     if payload:
         db = DatabaseManager()
         user= db.getUser(payload['email'])
-        db.storePriceTracker(user['id'], item.symbol, item.min_target_price, item.max_target_price, item.status)
+        db.storePriceTracker(user['id'], item.security_id, item.min_target_price, item.max_target_price, item.status)
         return {"message": "price is track is added."}
     else:
         raise HTTPException(status_code=401, detail="Invalid Token")

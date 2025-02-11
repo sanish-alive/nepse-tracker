@@ -19,7 +19,7 @@ class PasswordUpdate(BaseModel):
     confirm_password: str = Field(..., min_length=8, max_length=128, description="The confirmation of the new password.")
 
 class PriceTrackerItem(BaseModel):
-    symbol: str
+    security_id: int
     min_target_price: float
     max_target_price: float
     status: bool

@@ -32,28 +32,27 @@ class DatabaseManager:
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS sectors (
                         id  INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT NOT NULL,
-                        description TEXT NOT NULL,
+                        name TEXT NOT NULL UNIQUE,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
         print("Sectors table is created.")
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stocks (
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS securities(
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         sector_id INTEGER NOT NULL,
-                        full_name TEXT NOT NULL,
-                        symbol TEXT NOT NULL,
-                        description TEXT NOT NULL,
-                        url TEXT NOT NULL,
+                        security_name TEXT NOT NULL,
+                        symbol TEXT NOT NULL UNIQUE,
+                        website TEXT,
+                        instrument_type TEXT NOT NULL,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (sector_id) REFERENCES sectors(id))''')
-        print("stocks table is created")
+        print("securities table is created")
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stock_price_alert (
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS security_price_alerts (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id INTEGER NOT NULL,
-                        stock_id TEXT NOT NULL,
+                        security_id TEXT NOT NULL,
                         min_target_price REAL NOT NULL,     
                         max_target_price REAL NOT NULL,
                         status BOOLEAN DEFAULT 0,
@@ -61,9 +60,21 @@ class DatabaseManager:
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (user_id) REFERENCES users(id),
-                        FOREIGN KEY (stock_id) REFERENCES stocks(id))''')
+                        FOREIGN KEY (security_id) REFERENCES securities(id))''')
         print("Stock Tracking table is created.")
         self.connection.commit()
+
+    # Sector Table
+    def insertSector(self, name):
+        self.cursor.execute("INSERT INTO sectors (name) VALUES (?)", (name,))
+        self.connection.commit()
+        print("Sector Stored.")
+
+    # Securities Table
+    def insertSecurity(self, sector_id, security_name, symbol, website, instrument_type):
+        self.cursor.execute("INSERT INTO securities (sector_id, security_name, symbol, website, instrument_type) VALUES (?, ?, ?, ?, ?)", (sector_id, security_name, symbol, website, instrument_type))
+        self.connection.commit()
+        print("security is inserted")
 
     def insertUser(self, username, email, password):
         self.cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password))
@@ -91,12 +102,12 @@ class DatabaseManager:
             return None
 
 
-    def storePriceTracker(self, user_id, symbol, min_price, max_price, status):
-        self.cursor.execute("INSERT INTO stock_tracking (user_id, symbol, min_target_price, max_target_price, status) VALUES (?, ?, ?, ?, ?)", (user_id, symbol.upper(), min_price, max_price, status))
+    def storePriceTracker(self, user_id, security_id, min_price, max_price, status):
+        self.cursor.execute("INSERT INTO security_price_alerts (user_id, security_id, min_target_price, max_target_price, status) VALUES (?, ?, ?, ?, ?)", (user_id, security_id, min_price, max_price, status))
         self.connection.commit()
 
     def geAllUserPriceTracker(self, user_id):
-        self.cursor.execute("SELECT * FROM stock_tracking WHERE user_id = ?", (user_id,))
+        self.cursor.execute("SELECT * FROM security_price_alerts WHERE user_id = ?", (user_id,))
         price_tracks = self.cursor.fetchall()
         if price_tracks:
             return price_tracks
@@ -104,7 +115,7 @@ class DatabaseManager:
             return None
 
     def getUserActivePriceTracker(self, user_id):
-        self.cursor.execute("SELECT * FROM stock_tracking WHERE user_id = ? AND status = '1'", (user_id,))
+        self.cursor.execute("SELECT * FROM stock_price_alert WHERE user_id = ? AND status = '1'", (user_id,))
         price_tracks = self.cursor.fetchall()
         if price_tracks:
             return price_tracks
