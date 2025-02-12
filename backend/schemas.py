@@ -6,11 +6,13 @@ class LoginRequest(BaseModel):
 
 class UserRegistration(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_]+$", description="Username must be alphanumeric and can include underscores.")
+    fullname: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_ ]+$", description="Full name must be alphanumeric and can include underscores.")
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128, description="Password must be at least 8 characters long.")
 
 class UserUpdate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_]+$", description="Username must be alphanumeric and can include underscores.")
+    fullname: str = Field(..., min_length=3, max_length=50, pattern="^[a-zA-Z0-9_ ]+$", description="Full name must be alphanumeric and can include underscores.")
     email: EmailStr
 
 class PasswordUpdate(BaseModel):

@@ -32,7 +32,7 @@ async def signUp(item: Annotated[schemas.UserRegistration, Body(embed=True)]):
     try:
         db = DatabaseManager()
         password = security.getPasswordHash(item.password)
-        db.insertUser(item.username, item.email, password)
+        db.insertUser(item.username, item.fullname, item.email, password)
         return {"message": "User registered successfully!"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -46,6 +46,7 @@ async def signIn(response: Response, request: schemas.LoginRequest):
             if security.verfiyPassword(request.password, user['password']):
                 data = {
                     "username": user["username"],
+                    "fullname": user["fullname"],
                     "email": user["email"]
                 }
                 token = security.createAccessToken(data)
@@ -54,7 +55,7 @@ async def signIn(response: Response, request: schemas.LoginRequest):
                     value=token,
                     httponly=True,
                     secure=False,
-                    samesite="lax"
+                    samesite="Strict"
                 )
                 return {"message": "Login success.", "token": token}
             else:
@@ -71,7 +72,6 @@ async def logout(response: Response):
 
 @app.get("/profile")
 async def getUser(request: Request):
-    print(request.cookies)
     access_token = request.cookies.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not Authenticated")
@@ -82,6 +82,7 @@ async def getUser(request: Request):
         user = db.getUser(payload['email'])
         data = {
             "username": user['username'],
+            "fullname": user['fullname'],
             "email": user["email"],
             "updatedat": user['updated_at'],
             "createdat": user['created_at']
@@ -100,7 +101,7 @@ async def updateProfile(request: Request, user_detail: schemas.UserUpdate):
     if payload:
         db = DatabaseManager()
         user = db.getUser(payload['email'])
-        db.updateUser(user['id'], user_detail.username, user_detail.email)
+        db.updateUser(user['id'], user_detail.username, user.fullname, user_detail.email)
         return {"message": "User detail is updated"}
     else:
         raise HTTPException(status_code=401, detail="Invalid Token")

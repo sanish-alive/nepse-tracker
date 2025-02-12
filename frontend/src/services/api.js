@@ -19,3 +19,11 @@ export const getPriceTracker = async () => {
     const data = await response.json()
     return data
 }
+
+export const getProfile = async () => {
+    const response = await fetch(`${BASE_URL}/profile`, {
+        credentials: "include",
+    })
+    const data = await response.json()
+    return data
+}

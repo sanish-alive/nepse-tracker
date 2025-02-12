@@ -23,6 +23,7 @@ class DatabaseManager:
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             username TEXT NOT NULL UNIQUE,
+                            fullname TEXT NOT NULL,
                             email TEXT NOT NULL UNIQUE,
                             password TEXT NOT NULL,
                             status BOOLEAN DEFAULT 0,
@@ -76,13 +77,14 @@ class DatabaseManager:
         self.connection.commit()
         print("security is inserted")
 
-    def insertUser(self, username, email, password):
-        self.cursor.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", (username, email, password))
+    # Users Table
+    def insertUser(self, username, fullname, email, password):
+        self.cursor.execute("INSERT INTO users (username, fullname, email, password) VALUES (?, ?, ?, ?)", (username, fullname, email, password))
         self.connection.commit()
         print('User created.')
 
-    def updateUser(self, user_id, username, email):
-        self.cursor.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", (username, email, user_id))
+    def updateUser(self, user_id, fullname, username, email):
+        self.cursor.execute("UPDATE users SET username = ?, fullname = ?, email = ? WHERE id = ?", (username, fullname, email, user_id))
         self.connection.commit()
 
     def getAllUsers(self):

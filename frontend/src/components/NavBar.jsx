@@ -11,6 +11,7 @@ function NavBar() {
                 <Link to="/" className="nav-link">Home</Link>
                 <Link to="/price-track" className="nav-link">Price Track</Link>
                 <Link to="/open-ipo" className="nav-link"> Open IPO</Link>
+                <Link to="/profile" className="nav-link"> 😎</Link>
             </div>
         </nav>
     )

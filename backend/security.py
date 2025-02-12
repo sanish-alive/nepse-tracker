@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from passlib.context import CryptContext
+from fastapi import HTTPException
 import jwt
 from datetime import datetime, timedelta, timezone
 
@@ -22,7 +23,13 @@ def createAccessToken(data: dict):
 
 def verifyToken(token: str):
     try:
-        payload = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=[os.getenv('ALGORITHM')])
+        payload = jwt.decode(
+            token,
+            os.getenv('SECRET_KEY'),
+            algorithms=[os.getenv('ALGORITHM')],
+        )
         return payload
-    except Exception:   
-        return None
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
