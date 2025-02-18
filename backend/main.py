@@ -117,13 +117,25 @@ async def getPriceTracker(request: Request):
         db = DatabaseManager()
         user = db.getUser(payload['email'])
         price_tracks = db.geAllUserPriceTracker(user['id'])
+        data = []
+        for pr in price_tracks:
+            stock = db.getSecurity(pr["security_id"])
+            data.append({
+                "id": pr["id"],
+                "symbol": stock['symbol'],
+                "name": stock["security_name"],
+                "min_price": pr["min_target_price"],
+                "max_price": pr["max_target_price"],
+                "created_at": pr["created_at"],
+                "status": "Active" if pr["status"] == 1 else "Inactive"
+            })
 
-        return price_tracks
+        return data
     else:
         raise HTTPException(status_code=401, detail="Invalid Token")
 
 @app.post("/price-tracker")
-async def storePriceTracker(request: Request, item: Annotated[schemas.PriceTrackerItem, Body(embed=True)]):
+async def storePriceTracker(request: Request, item: schemas.PriceTrackerItem):
     access_token = request.cookies.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Not Authenticated")
@@ -132,7 +144,22 @@ async def storePriceTracker(request: Request, item: Annotated[schemas.PriceTrack
     if payload:
         db = DatabaseManager()
         user= db.getUser(payload['email'])
+        print(item)
         db.storePriceTracker(user['id'], item.security_id, item.min_target_price, item.max_target_price, item.status)
         return {"message": "price is track is added."}
     else:
         raise HTTPException(status_code=401, detail="Invalid Token")
+    
+@app.get("/securities")
+async def securities(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
+    
+    payload = security.verifyToken(access_token)
+    if payload:
+        db = DatabaseManager()
+        security_list = db.getAllSecurities()
+        return security_list
+    else:
+        raise HTTPException(status_code=401, detail="Invalid token")

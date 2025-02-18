@@ -1,65 +1,52 @@
-import PriceTrackAlert from "../components/PriceTrackAlert"
-import {useState, useEffect} from "react"
-import { getOnline, getPriceTracker, getRoot } from "../services/api"
-import "../styles/Home.css"
+import PriceTrackAlert from "../components/PriceTrackAlert";
+import { useState, useEffect } from "react";
+import { getPriceTracker, getSecurities, submitPriceTrack } from "../services/api";
+import "../styles/PriceTrack.css";
+import PriceTrackAlertForm from "../components/PriceTrackAlertFrom";
 
 function PriceTrack() {
-    const [searchQuery, setSearchQuery] = useState("")
-    // const priceAlerts = [
-    //     {id: 1, symbol: "NIFRA", min_price: 111, max_price: 222, created_at: 23123},
-    //     {id: 2, symbol: "APFL", min_price: 234, max_price: 645, created_at: 4123},
-    //     {id: 3, symbol: "NABIL", min_price: 352, max_price: 822, created_at: 123}
-    // ]
-
-
-    const [priceTrack, setPriceTrack] = useState([])
-    const [error, setError] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const [isOpen, setIsOpen] = useState(false);
+    const [priceTrack, setPriceTrack] = useState([]);
+    const [securities, setSecurities] = useState([]);    
 
     useEffect(() => {
         const loadPriceTracker = async () => {
             try {
-                const priceAlerts = await getPriceTracker()
-                setPriceTrack(priceAlerts)
-                console.log(priceAlerts)
+                const priceAlerts = await getPriceTracker();
+                setPriceTrack(priceAlerts);
+                console.log(priceAlerts);
             } catch (err) {
-                console.log(err)
-                setError("Failed to Load...")
+                console.error(err);
             }
-            finally {
-                setLoading(false)
-            }
-            
+        };
+        loadPriceTracker();
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) {
+            const loadSecurities = async () => {
+                try {
+                    const ourSecurities = await getSecurities();
+                    setSecurities(ourSecurities);
+                } catch (err) {
+                    console.error(err);
+                }
+            };
+            loadSecurities();
         }
-        loadPriceTracker()
-    }, [])
+    }, [isOpen]);
 
-    const handleSearch = (e) => {
-        e.preventDefault()
-        alert(searchQuery)
-    }
+    return (
+        <div className="price-track-container">
+            <button onClick={() => setIsOpen(true)}>Add Here</button>
+            
+            {isOpen && (
+                <PriceTrackAlertForm securities={securities} />
+            )}
 
-    // return (
-    //     <div className="home">
-    //         <form onSubmit={handleSearch} className="search-alert-form">
-    //             <input
-    //              type="text"
-    //              placeholder="Search for alerts..."
-    //              className="search-input"
-    //              value={searchQuery}
-    //              onChange={(e) => setSearchQuery(e.target.value)}
-    //             />
-    //             <button type="submit" className="search-button">Search</button>
-    //         </form>
-    //         <div className="alerts-grid">
-    //             {priceTrack.map((alert) => (
-    //                 alert.symbol.toLowerCase().startsWith(searchQuery) && (
-    //                     <PriceTrackAlert detail={alert} key={alert.id} />
-    //                 )
-    //             ))}
-    //         </div>
-    //     </div>
-    // )
+            <PriceTrackAlert detail={priceTrack} />
+        </div>
+    );
 }
 
-export default PriceTrack
+export default PriceTrack;

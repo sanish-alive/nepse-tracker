@@ -77,6 +77,18 @@ class DatabaseManager:
         self.connection.commit()
         print("security is inserted")
 
+    def getSecurity(self, id):
+        self.cursor.execute("SELECT * FROM securities WHERE id = ? LIMIT 1", (id,))
+        security = self.cursor.fetchone()
+        if security:
+            return security
+        else:
+            return None
+    def getAllSecurities(self):
+        self.cursor.execute("SELECT id, security_name, symbol, instrument_type FROM securities")
+        securities = self.cursor.fetchall()
+        return securities if securities else None
+
     # Users Table
     def insertUser(self, username, fullname, email, password):
         self.cursor.execute("INSERT INTO users (username, fullname, email, password) VALUES (?, ?, ?, ?)", (username, fullname, email, password))
