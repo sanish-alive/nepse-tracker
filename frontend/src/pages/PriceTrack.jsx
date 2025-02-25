@@ -19,8 +19,8 @@ function PriceTrack() {
                 console.error(err);
             }
         };
-        loadPriceTracker();
-    }, [isOpen]);
+        loadPriceTracker()
+    }, [])
 
     useEffect(() => {
         if (isOpen) {
@@ -37,14 +37,12 @@ function PriceTrack() {
     }, [isOpen]);
 
     return (
-        <div className="price-track-container">
-            <button onClick={() => setIsOpen(true)}>Add Here</button>
-            
+        <div className="datatable-container">
             {isOpen && (
-                <PriceTrackAlertForm securities={securities} />
+                <PriceTrackAlertForm securities={securities} setIsOpen={setIsOpen}/>
             )}
 
-            <PriceTrackAlert detail={priceTrack} />
+            <PriceTrackAlert detail={priceTrack} setIsOpen={setIsOpen} />
         </div>
     );
 }

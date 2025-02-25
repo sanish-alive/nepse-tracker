@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 load_dotenv()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def verfiyPassword(plain_password, hashed_password):
+def verifyPassword(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def getPasswordHash(password):
@@ -16,7 +16,7 @@ def getPasswordHash(password):
 
 def createAccessToken(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')))
+    expire = datetime.now(timezone.utc) + timedelta(minutes=int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 30)))
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, os.getenv('SECRET_KEY'), algorithm = os.getenv('ALGORITHM'))
     return encoded_jwt
@@ -33,3 +33,10 @@ def verifyToken(token: str):
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+def isAuthenticated(request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not Authenticated")
+    payload = verifyToken(access_token)
+    return payload

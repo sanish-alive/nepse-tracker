@@ -12,6 +12,38 @@ export const getRoot = async () => {
     return data
 }
 
+export const login = async (credentails) => {
+    const response = await fetch(`${BASE_URL}/signin`, {
+        method:"POST",
+        credentials:"include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentails)
+    })
+    return response
+}
+
+export const logout = async () => {
+    const response = await fetch(`${BASE_URL}/logout`, {
+        method: "POST",
+        credentials: "include",
+    })
+    return response
+}
+
+export const authCheck = async () => {
+    const response = await fetch(`${BASE_URL}/auth/check`, {
+        credentials: "include",
+    })
+
+    if (!response.ok) return false;
+    
+    const data = await response.json()
+    
+    return data.authenticated
+}
+
 export const getPriceTracker = async () => {
     const response = await fetch(`${BASE_URL}/price-tracker`, {
         credentials: "include",
@@ -25,7 +57,7 @@ export const submitPriceTrack = async (formData) => {
         credentials: "include",
         method: "POST",
         headers: {
-            "Content-Type": "application/json",  // ✅ Make sure this is set to JSON
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({
             security_id: parseInt(formData.security_id, 10),  // Ensure integer

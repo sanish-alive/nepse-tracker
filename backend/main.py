@@ -43,7 +43,7 @@ async def signIn(response: Response, request: schemas.LoginRequest):
         db = DatabaseManager()
         user = db.getUser(request.email)
         if user:
-            if security.verfiyPassword(request.password, user['password']):
+            if security.verifyPassword(request.password, user['password']):
                 data = {
                     "username": user["username"],
                     "fullname": user["fullname"],
@@ -54,18 +54,26 @@ async def signIn(response: Response, request: schemas.LoginRequest):
                     key="access_token",
                     value=token,
                     httponly=True,
-                    secure=False,
+                    secure=True,
                     samesite="Strict"
                 )
+                print('login success')
                 return {"message": "Login success.", "token": token}
             else:
-                return {"message": "Login failed."}
+                raise HTTPException(status_code=401, detail="Invalid email or password")
         else:
-            return {"message": "No such user exists"}
+            raise HTTPException(status_code=401, detail="Invalid email or password")
     except Exception as e:
-        return {"error": "login error"}
+        print(f"login error: {e}")
+        return {"error": e}
     
-@app.get("/logout")
+
+@app.get("/auth/check")
+async def authCheck(request: Request):
+    return {"authenticated": True} if security.isAuthenticated(request) else {"authenticated": False}
+
+
+@app.post("/logout")
 async def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "logged out successfully"}

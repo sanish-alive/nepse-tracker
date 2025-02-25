@@ -1,32 +1,32 @@
 import { useState, useEffect } from "react";
 import { submitPriceTrack } from "../services/api";
 
-function PriceTrackAlertForm({securities}) {
+function PriceTrackAlertForm({ securities, setIsOpen }) {
     const [formData, setFormData] = useState({
-            security_id: "",
-            min_target_price: "",
-            max_target_price: "",
-            status: true,
-        });
+        security_id: "",
+        min_target_price: "",
+        max_target_price: "",
+        status: true,
+    })
     const handleChange = (e) => {
-            const { name, value, type, checked } = e.target;
-            setFormData({
-                ...formData,
-                [name]: type === "checkbox" ? checked : value,
-            });
-        };
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === "checkbox" ? checked : value,
+        })
+    }
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        try {
+            const response = submitPriceTrack(formData)
+            alert("Price alert is added.")
+        } catch (err) {
+            console.log(err)
+        } finally {
+            setIsOpen(false);
+        }
+    }
     
-        const handleSubmit = (e) => {
-            e.preventDefault();
-            try {
-                const response = submitPriceTrack(formData)
-                alert("Price alert is added.")
-            } catch (err) {
-                console.log(err)
-            } finally {
-                setIsOpen(false);
-            }
-        };
     return (
         <div className="popup-overlay">
             <div className="popup-content">
