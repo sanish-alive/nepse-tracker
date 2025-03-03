@@ -84,6 +84,15 @@ class DatabaseManager:
             return security
         else:
             return None
+        
+    def getSecurityBySymbol(self, symbol):
+        self.cursor.execute("SELECT * FROM securities WHERE symbol = ? LIMIT 1", (symbol,))
+        security = self.cursor.fetchone()
+        if security:
+            return security
+        else:
+            return None
+    
     def getAllSecurities(self):
         self.cursor.execute("SELECT id, security_name, symbol, instrument_type FROM securities")
         securities = self.cursor.fetchall()
@@ -119,6 +128,13 @@ class DatabaseManager:
     def storePriceTracker(self, user_id, security_id, min_price, max_price, status):
         self.cursor.execute("INSERT INTO security_price_alerts (user_id, security_id, min_target_price, max_target_price, status) VALUES (?, ?, ?, ?, ?)", (user_id, security_id, min_price, max_price, status))
         self.connection.commit()
+
+    def updatePriceTracker(self, alert_id, user_id, security_id, min_price, max_price, status):
+        self.cursor.execute("UPDATE security_price_alerts SET security_id = ?, min_target_price = ?, max_target_price = ?, status = ? WHERE  user_id = ? AND id = ?", (security_id, min_price, max_price, status, user_id, alert_id))
+        self.connection.commit()
+
+    def destroyPriceTracker(self, user_id, alert_id):
+        self.cursor.execute("DELETE ")
 
     def geAllUserPriceTracker(self, user_id):
         self.cursor.execute("SELECT * FROM security_price_alerts WHERE user_id = ?", (user_id,))

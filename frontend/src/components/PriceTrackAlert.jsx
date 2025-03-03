@@ -1,12 +1,56 @@
 import { useState } from "react";
+import { deletePriceTrack, updatePriceTrack } from "../services/api";
 
-function PriceTrackAlert({ detail, setIsOpen }) {
+function PriceTrackAlert({ detail, setIsOpen, setReload }) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [editMode, setEditMode] = useState(null)
+    const [editedData, setEditedData] = useState({})
 
     // Filter alerts based on the search term
-    const filteredDetails = detail.filter((alert) =>
-        alert.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDetails = Array.isArray(detail)
+        ? detail.filter((alert) =>
+            alert.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : [];
+
+    const handleEditClick = (alert) => {
+        setEditMode(alert.id);
+        setEditedData({ ...alert })
+    }
+
+    const handleInputChange = (e, field) => {
+        setEditedData({
+            ...editedData,
+            [field]: e.target.value,
+        })
+    }
+
+    const handleSave = async (id) => {
+        try {
+            const response = await updatePriceTrack(editedData)
+        } catch (err) {
+            console.log(err)
+        } finally {
+            setEditMode(null)
+            setReload(true)
+        }
+        
+    }
+
+    const handleDelete = async (id) => {
+        try {
+            const response = await deletePriceTrack(id)
+            if (response) {
+                alert("Deleted")
+            } else {
+                alert("Failed to delete. Please try again later.")
+            }
+        } catch (err) {
+            console.log(err)
+        } finally {
+            setReload(true)
+        }
+    }
 
     return (
         <>
@@ -14,8 +58,13 @@ function PriceTrackAlert({ detail, setIsOpen }) {
                 <div className="tools">
                     <ul>
                         <li>
-                            <button onClick={() => setIsOpen(true)}>
+                            <button onClick={() => setIsOpen(true)} title="Add">
                                 ➕
+                            </button>
+                        </li>
+                        <li>
+                            <button onClick={() => setReload(true)} title="Refresh">
+                                🔃
                             </button>
                         </li>
                     </ul>
@@ -39,7 +88,6 @@ function PriceTrackAlert({ detail, setIsOpen }) {
                         <th>Symbol</th>
                         <th>Minimum Price</th>
                         <th>Maximum Price</th>
-                        <th>Created At</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -48,21 +96,59 @@ function PriceTrackAlert({ detail, setIsOpen }) {
                     {filteredDetails.length > 0 ? (
                         filteredDetails.map((alert, index) => (
                             <tr key={alert.id}>
-                                <td>{index + 1}</td> {/* Dynamic Serial Number */}
-                                <td title={alert.name}>{alert.symbol}</td>
-                                <td>{alert.min_price}</td>
-                                <td>{alert.max_price}</td>
-                                <td>{new Date(alert.created_at).toLocaleDateString()}</td> {/* Formatted Date */}
-                                <td>{alert.status ? "Active" : "Inactive"}</td> {/* Active or Inactive Status */}
+                                <td>{index + 1}</td>
+                                <td title={alert.name}>
+                                    {editMode === alert.id ? (
+                                        <input
+                                            type="text"
+                                            value={editedData.symbol}
+                                            onChange={(e) => handleInputChange(e, "symbol")}
+                                        />
+                                    ) : (
+                                        alert.symbol
+                                    )}
+                                </td>
                                 <td>
-                                    <button>✏️</button>
-                                    <button>🗑️</button>
+                                    {editMode === alert.id ? (
+                                        <input
+                                            type="number"
+                                            value={editedData.min_price}
+                                            onChange={(e) => handleInputChange(e, "min_price")}
+                                        />
+                                    ) : (
+                                        alert.min_price
+                                    )}
+                                </td>
+                                <td>
+                                    {editMode === alert.id ? (
+                                        <input
+                                            type="number"
+                                            value={editedData.max_price}
+                                            onChange={(e) => handleInputChange(e, "max_price")}
+                                        />
+                                    ) : (
+                                        alert.max_price
+                                    )}
+                                </td>
+                                <td>{alert.status ? "Active" : "Inactive"}</td>
+                                <td>
+                                    {editMode === alert.id ? (
+                                        <>
+                                            <button onClick={() => handleSave(alert.id)}>💾 Save</button>
+                                            <button onClick={() => setEditMode(null)}>❌ Cancel</button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => handleEditClick(alert)}>✏️ Edit</button>
+                                            <button>🗑️ Delete</button>
+                                        </>
+                                    )}
                                 </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="7" className="no-data">
+                            <td colSpan="6" className="no-data">
                                 No data available.
                             </td>
                         </tr>
@@ -70,7 +156,7 @@ function PriceTrackAlert({ detail, setIsOpen }) {
                 </tbody>
             </table>
 
-            <div className="footer-tools">
+            {/* <div className="footer-tools">
                 <div className="list-items">
                     Show
                     <select name="n-entries" id="n-entries" className="n-entries">
@@ -108,7 +194,7 @@ function PriceTrackAlert({ detail, setIsOpen }) {
                         </li>
                     </ul>
                 </div>
-            </div>
+            </div> */}
         </>
     );
 }

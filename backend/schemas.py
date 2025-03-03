@@ -25,3 +25,13 @@ class PriceTrackerItem(BaseModel):
     min_target_price: float
     max_target_price: float
     status: bool
+
+class UpdatePriceTrackerItem(BaseModel):
+    alert_id: int
+    symbol: str
+    min_target_price: float
+    max_target_price: float
+    status: bool
+    
+class DestroyPriceTrakcerItem(BaseModel):
+    alert_id: int

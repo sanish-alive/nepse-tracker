@@ -73,6 +73,48 @@ export const submitPriceTrack = async (formData) => {
     return await response.json()
 }
 
+export const updatePriceTrack = async (formData) => {
+    const response = await fetch(`${BASE_URL}/price-tracker`, {
+        credentials: "include",
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            alert_id: parseInt(formData.id, 10),
+            symbol: formData.symbol,  // Ensure integer
+            min_target_price: parseFloat(formData.min_price), // Ensure float
+            max_target_price: parseFloat(formData.max_price), // Ensure float
+            status: Boolean(formData.status)  // Ensure boolean
+        }),
+    })
+
+    if (!response.ok) {
+        throw new Error("Failed to submit data")
+    }
+    return await response.json()
+}
+
+export const deletePriceTrack = async (id) {
+    const response = await fetch(`${BASE_URL}/price-tracker`, {
+        credentials: "include",
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            alert_id: parseInt(id, 10),
+        }),
+    })
+
+    data = response.json()
+
+    if (response.ok && data.status) {
+        return true
+    }
+    return false
+}
+
 export const getProfile = async () => {
     const response = await fetch(`${BASE_URL}/profile`, {
         credentials: "include",

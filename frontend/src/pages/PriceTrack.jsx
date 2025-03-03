@@ -7,20 +7,22 @@ import PriceTrackAlertForm from "../components/PriceTrackAlertFrom";
 function PriceTrack() {
     const [isOpen, setIsOpen] = useState(false);
     const [priceTrack, setPriceTrack] = useState([]);
-    const [securities, setSecurities] = useState([]);    
+    const [securities, setSecurities] = useState([]);
+    const [reload,setReload] = useState(false)
 
     useEffect(() => {
         const loadPriceTracker = async () => {
             try {
                 const priceAlerts = await getPriceTracker();
                 setPriceTrack(priceAlerts);
-                console.log(priceAlerts);
             } catch (err) {
                 console.error(err);
+            } finally {
+                setReload(false)
             }
         };
         loadPriceTracker()
-    }, [])
+    }, [reload])
 
     useEffect(() => {
         if (isOpen) {
@@ -39,10 +41,10 @@ function PriceTrack() {
     return (
         <div className="datatable-container">
             {isOpen && (
-                <PriceTrackAlertForm securities={securities} setIsOpen={setIsOpen}/>
+                <PriceTrackAlertForm securities={securities} setIsOpen={setIsOpen} />
             )}
 
-            <PriceTrackAlert detail={priceTrack} setIsOpen={setIsOpen} />
+            <PriceTrackAlert detail={priceTrack} setIsOpen={setIsOpen} setReload={setReload} />
         </div>
     );
 }

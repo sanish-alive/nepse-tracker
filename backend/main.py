@@ -1,3 +1,4 @@
+import uvicorn
 from dotenv import load_dotenv
 import security
 from typing import Annotated
@@ -156,7 +157,31 @@ async def storePriceTracker(request: Request, item: schemas.PriceTrackerItem):
         db.storePriceTracker(user['id'], item.security_id, item.min_target_price, item.max_target_price, item.status)
         return {"message": "price is track is added."}
     else:
-        raise HTTPException(status_code=401, detail="Invalid Token")
+        raise HTTPException(status_code=401, detail="Invalid Token!")
+    
+@app.put("/price-tracker")
+async def updatePriceTracker(request: Request, item: schemas.UpdatePriceTrackerItem):
+    payload = security.isAuthenticated(request)
+    if payload:
+        db = DatabaseManager()
+        user = db.getUser(payload["email"])
+        security_id = db.getSecurityBySymbol(item.symbol)["id"]
+        db.updatePriceTracker(item.alert_id, user['id'], security_id, item.min_target_price, item.max_target_price, item.status)
+        return {"message": "Price Tracke is updated."}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid Token!")
+    
+@app.delete("/price-tracker")
+async def destroyPriceTracker(request: Request, item: schemas.DestroyPriceTrakcerItem):
+    payload = security.isAuthenticated(request)
+    if payload:
+        db = DatabaseManager()
+        user = db.getUser(payload["email"])
+        db.destroyPriceTracker(user['id'], item.alert_id)
+        return {"status": True}
+    else:
+        return {"status": False}
+
     
 @app.get("/securities")
 async def securities(request: Request):
@@ -171,3 +196,6 @@ async def securities(request: Request):
         return security_list
     else:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
