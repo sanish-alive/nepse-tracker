@@ -133,10 +133,11 @@ async def getPriceTracker(request: Request):
                 "id": pr["id"],
                 "symbol": stock['symbol'],
                 "name": stock["security_name"],
+                "security_id": pr["security_id"],
                 "min_price": pr["min_target_price"],
                 "max_price": pr["max_target_price"],
                 "created_at": pr["created_at"],
-                "status": "Active" if pr["status"] == 1 else "Inactive"
+                "status": pr["status"]
             })
 
         return data
@@ -163,10 +164,10 @@ async def storePriceTracker(request: Request, item: schemas.PriceTrackerItem):
 async def updatePriceTracker(request: Request, item: schemas.UpdatePriceTrackerItem):
     payload = security.isAuthenticated(request)
     if payload:
+        print(item.status)
         db = DatabaseManager()
         user = db.getUser(payload["email"])
-        security_id = db.getSecurityBySymbol(item.symbol)["id"]
-        db.updatePriceTracker(item.alert_id, user['id'], security_id, item.min_target_price, item.max_target_price, item.status)
+        db.updatePriceTracker(item.alert_id, user['id'], item.security_id, item.min_target_price, item.max_target_price, item.status)
         return {"message": "Price Tracke is updated."}
     else:
         raise HTTPException(status_code=401, detail="Invalid Token!")

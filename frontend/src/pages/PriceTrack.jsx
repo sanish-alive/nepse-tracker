@@ -9,6 +9,7 @@ function PriceTrack() {
     const [priceTrack, setPriceTrack] = useState([]);
     const [securities, setSecurities] = useState([]);
     const [reload,setReload] = useState(false)
+    const [isEdit, setIsEdit] = useState(false)
 
     useEffect(() => {
         const loadPriceTracker = async () => {
@@ -25,7 +26,7 @@ function PriceTrack() {
     }, [reload])
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen || isEdit) {
             const loadSecurities = async () => {
                 try {
                     const ourSecurities = await getSecurities();
@@ -36,7 +37,7 @@ function PriceTrack() {
             };
             loadSecurities();
         }
-    }, [isOpen]);
+    }, [isOpen, isEdit]);
 
     return (
         <div className="datatable-container">
@@ -44,7 +45,7 @@ function PriceTrack() {
                 <PriceTrackAlertForm securities={securities} setIsOpen={setIsOpen} />
             )}
 
-            <PriceTrackAlert detail={priceTrack} setIsOpen={setIsOpen} setReload={setReload} />
+            <PriceTrackAlert detail={priceTrack} setIsOpen={setIsOpen} setReload={setReload} setIsEdit={setIsEdit} securities={securities} />
         </div>
     );
 }

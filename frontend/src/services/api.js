@@ -82,10 +82,10 @@ export const updatePriceTrack = async (formData) => {
         },
         body: JSON.stringify({
             alert_id: parseInt(formData.id, 10),
-            symbol: formData.symbol,  // Ensure integer
+            security_id: parseInt(formData.security_id, 10),  // Ensure integer
             min_target_price: parseFloat(formData.min_price), // Ensure float
             max_target_price: parseFloat(formData.max_price), // Ensure float
-            status: Boolean(formData.status)  // Ensure boolean
+            status: formData.status  // Ensure boolean
         }),
     })
 
@@ -95,7 +95,7 @@ export const updatePriceTrack = async (formData) => {
     return await response.json()
 }
 
-export const deletePriceTrack = async (id) {
+export const deletePriceTrack = async (id) => {
     const response = await fetch(`${BASE_URL}/price-tracker`, {
         credentials: "include",
         method: "DELETE",

@@ -28,7 +28,7 @@ class PriceTrackerItem(BaseModel):
 
 class UpdatePriceTrackerItem(BaseModel):
     alert_id: int
-    symbol: str
+    security_id: int
     min_target_price: float
     max_target_price: float
     status: bool

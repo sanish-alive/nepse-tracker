@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { deletePriceTrack, updatePriceTrack } from "../services/api";
 
-function PriceTrackAlert({ detail, setIsOpen, setReload }) {
+function PriceTrackAlert({ detail, setIsOpen, setReload, setIsEdit, securities }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [editMode, setEditMode] = useState(null)
     const [editedData, setEditedData] = useState({})
@@ -14,6 +14,7 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
         : [];
 
     const handleEditClick = (alert) => {
+        setIsEdit(true)
         setEditMode(alert.id);
         setEditedData({ ...alert })
     }
@@ -21,12 +22,14 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
     const handleInputChange = (e, field) => {
         setEditedData({
             ...editedData,
-            [field]: e.target.value,
+            [field]: field === "id" ? Number(e.target.value) : e.target.value,
         })
+        console.log(e.target.value)
     }
 
     const handleSave = async (id) => {
         try {
+            console.log(editedData)
             const response = await updatePriceTrack(editedData)
         } catch (err) {
             console.log(err)
@@ -34,10 +37,13 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
             setEditMode(null)
             setReload(true)
         }
-        
+
     }
 
     const handleDelete = async (id) => {
+        const isConfirmed = window.confirm("Are you sure you want to delete this price track?");
+
+        if (!isConfirmed) return; // Stop execution if user cancels
         try {
             const response = await deletePriceTrack(id)
             if (response) {
@@ -99,11 +105,17 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
                                 <td>{index + 1}</td>
                                 <td title={alert.name}>
                                     {editMode === alert.id ? (
-                                        <input
-                                            type="text"
-                                            value={editedData.symbol}
-                                            onChange={(e) => handleInputChange(e, "symbol")}
-                                        />
+                                        <select value={editedData.security_id} onChange={(e) => handleInputChange(e, "security_id")}>
+                                            {securities.length > 0 ? (
+                                                securities.map((security) => (
+                                                    <option key={security.id} value={security.id} title={security.security_name}>
+                                                        {security.symbol}
+                                                    </option>
+                                                ))
+                                            ) : (
+                                                <option disabled>None</option>
+                                            )}
+                                        </select>
                                     ) : (
                                         alert.symbol
                                     )}
@@ -130,7 +142,17 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
                                         alert.max_price
                                     )}
                                 </td>
-                                <td>{alert.status ? "Active" : "Inactive"}</td>
+                                <td>
+                                    {editMode === alert.id ? (
+                                        <select value={editedData.status} onChange={(e) => handleInputChange(e, "status")}>
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+                                        </select>
+                                    ) : (
+                                        alert.status ? "Active" : "Inactive"
+                                    )}
+                                </td>
+
                                 <td>
                                     {editMode === alert.id ? (
                                         <>
@@ -140,7 +162,7 @@ function PriceTrackAlert({ detail, setIsOpen, setReload }) {
                                     ) : (
                                         <>
                                             <button onClick={() => handleEditClick(alert)}>✏️ Edit</button>
-                                            <button>🗑️ Delete</button>
+                                            <button onClick={() => handleDelete(alert.id)}>🗑️ Delete</button>
                                         </>
                                     )}
                                 </td>

@@ -134,7 +134,8 @@ class DatabaseManager:
         self.connection.commit()
 
     def destroyPriceTracker(self, user_id, alert_id):
-        self.cursor.execute("DELETE ")
+        self.cursor.execute("DELETE FROM security_price_alerts WHERE user_id = ? AND id = ?", (user_id, alert_id))
+        self.connection.commit()
 
     def geAllUserPriceTracker(self, user_id):
         self.cursor.execute("SELECT * FROM security_price_alerts WHERE user_id = ?", (user_id,))
