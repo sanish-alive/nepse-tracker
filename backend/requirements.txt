@@ -1,4 +1,7 @@
 fastapi==0.115.7
+uvicorn==0.34.2
 passlib==1.7.4
+bcrypt==4.3.0
 pyjwt==2.10.1
+python-dotenv==1.1.0
 nepse @ git+https://github.com/sanish-alive/NepseUnofficialApi.git

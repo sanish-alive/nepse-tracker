@@ -25,11 +25,13 @@ function Login() {
         try {
             const response = await login(credentials)
             const data = await response.json()
-            if (response.ok) {
+            console.log(data)
+            if (status_code == 200) {
                 setAuth()
                 navigate("/profile")
             } else {
                 console.log("login failed:")
+                navigate("/login")
             }
         } catch (err) {
             console.log(err)
