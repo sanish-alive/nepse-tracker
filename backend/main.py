@@ -59,14 +59,14 @@ async def signIn(response: Response, request: schemas.LoginRequest):
                     samesite="Strict"
                 )
                 print('login success')
-                return {"message": "Login success.", "token": token}
+                return {"login": True, "message": "Login success.", "token": token}
             else:
-                raise HTTPException(status_code=401, detail="Invalid email or password")
+                return {"login": False, "message": "Invalid Credentials"}
         else:
-            raise HTTPException(status_code=401, detail="Invalid email or password")
+            return {"login": False, "message": "Invalid Credentials"}
     except Exception as e:
         print(f"login error: {e}")
-        return {"error": e}
+        return {"login": False, "message": "Something went wrong. Please try again."}
     
 
 @app.get("/auth/check")
@@ -182,7 +182,6 @@ async def destroyPriceTracker(request: Request, item: schemas.DestroyPriceTrakce
         return {"status": True}
     else:
         return {"status": False}
-
     
 @app.get("/securities")
 async def securities(request: Request):
